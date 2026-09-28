@@ -1,0 +1,542 @@
+\documentclass[]{interact}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[numbers,sort&compress]{natbib}
+\bibliographystyle{tfnlm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\law}{\mathrm{law}}
+\newcommand{\Ocal}{\mathcal{O}}
+\newcommand{\Sp}{\mathbb{S}}
+\newcommand{\weakto}{\rightsquigarrow}
+\newcommand{\He}{\mathrm{He}}
+\newcommand{\push}[1]{{#1}_{\#}}
+\newcommand{\Gp}{\mathbb{W}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage{url}
+\begin{document}
+
+\articletype{ARTICLE}
+
+\title{Two-sample testing up to a rotation: calibration, a projected
+non-Gaussianity test, and a Hermite view of contrast choice}
+
+\author{\name{J. Touboul}\affil{Independent researcher}}
+
+\thanks{CONTACT J. Touboul. Email: jack\_touboul@hotmail.com}
+
+\maketitle
+
+\begin{abstract}
+We test whether two whitened planar distributions are equal up to an unknown
+rotation---the alignment question behind two-dimensional independent component
+analysis. Our first message is a caution: aligning a two-sample statistic by a
+rotation search and calibrating by permutation is anticonservative, rejecting a
+genuine rotation far too often. We give a projected non-Gaussianity statistic with
+its limit law and a consistent multiplier bootstrap, and prove naive resampling
+miscalibrates. Among valid competitors an ICA-canonicalized energy test is
+competitive or more powerful, so the projected test's value is guaranteed
+calibration, not power. On real breast-cancer data the projected test is the only
+competitor that stays level-valid, while naive energy and even energy-after-ICA
+over-reject. A Hermite view explains contrast choice: whitening annihilates the
+first three Hermite orders, so a small corrected bank is used. All results are for
+$d=2$.
+\end{abstract}
+
+\begin{keywords}
+rotation alignment; independent component analysis; projection pursuit; two-sample
+testing; multiplier bootstrap; Hermite polynomials
+\end{keywords}
+
+\section{Introduction}
+
+Many questions ask not whether two distributions are equal, but whether they are
+equal up to a transformation one does not know. Two-dimensional independent
+component analysis (ICA) asks whether two whitened planar laws agree up to a
+rotation. This paper is about testing that alignment, and about a pitfall in doing
+so.
+
+\paragraph{A calibration pitfall.} The obvious recipe is to take a good two-sample
+statistic, minimise it over rotations of one sample, and calibrate by permutation.
+This is invalid. The rotation search biases the observed statistic downward in a
+way the permutation replicates only partially, and the resulting test rejects a
+true rotation far too often (Section~\ref{sec:valid}; over $40\%$ in our runs).
+Testing equality up to a group action is not a cosmetic modification of testing
+equality: the nuisance must be handled in the calibration.
+
+\paragraph{When the question is nontrivial.} Whitening removes second-order
+structure. If the two laws have anisotropic covariance, whitening aligns them to
+their covariance eigenaxes and the rotation is already resolved; a plain two-sample
+test then suffices. The alignment question is substantive only in the isotropic
+regime, where covariance does not pin the rotation and only higher-order structure
+can. We work there throughout.
+
+\paragraph{What is actually tested.} Our statistic compares, after the best
+alignment, the direction \emph{profiles} of a scalar contrast. A profile is a
+projection summary and does not determine the law, so profile alignment is
+\emph{implied by} but does not \emph{imply} the alignment null. The test is thus a
+calibrated screening test for a profile-based surrogate; a small bank of contrasts
+widens the surrogate but does not make it exact. We state this plainly rather than
+claim a characterisation the statistic cannot deliver.
+
+\paragraph{Contributions.} (i) A limit law for the aligned statistic with a
+consistent multiplier-bootstrap calibration, and a proof that naive resampling is
+anticonservative (Sections~\ref{sec:prob}--\ref{sec:stat}); (ii) a comparison that
+sorts competitors into valid and invalid, honest that among the valid tests an
+ICA-canonicalized energy test is competitive or better (Section~\ref{sec:valid});
+(iii) a Hermite analysis of contrast choice (Section~\ref{sec:xi}). All results are
+for $d=2$; Section~\ref{sec:disc} discusses general $d$.
+
+\paragraph{Related work.} Two-sample equality is tested by the energy distance
+\cite{szekely}, kernel MMD \cite{gretton}, and, for dependence, the copula tests of
+R\'emillard and Scaillet \cite{remillard}; none targets equality up to a group
+action. Projection indices of non-Gaussianity go back to projection pursuit
+\cite{friedman,huber} and underlie ICA \cite{comon,hyvarinen}; identifiability of
+the rotation is the ICA identifiability question \cite{comon}, with modern
+estimation theory in \cite{chenbickel,samworth}. Our focus is a calibrated test of
+the rotation's existence, not its estimation.
+
+\section{Setup}
+\label{sec:setup}
+
+Let $X,Y$ be $\R^2$-valued with finite moments and identity covariance
+(``whitened''; in the isotropic regime whitening is a standardisation that leaves
+the rotation unresolved). We observe independent i.i.d.\ unpaired samples of size
+$n$.
+
+\begin{definition}[Alignment null]
+With $\Ocal(2)$ the orthogonal group, $H_0:\ \law(Y)=\push{R}\law(X)$ for some
+$R\in\Ocal(2)$ ($\push{R}$ = pushforward).
+\end{definition}
+
+Fix a contrast $\xi:\R\to\R$. For $a_\theta=(\cos\theta,\sin\theta)$ and a whitened
+law $P$, the \emph{profile} is $k_P(\theta)=\E_{Z\sim P}[\xi(a_\theta^\top Z)]$. A
+rotation acts on the index by a shift, a reflection by $\theta\mapsto-\theta$, so
+under $H_0$ the profiles agree after a shift. Define the profile discrepancy
+\[
+D_\xi=\min_{\epsilon\in\{\pm1\}}\min_s\int_0^{2\pi}\big(k_Y(\theta)-
+k_X(\epsilon\theta+s)\big)^2\,d\theta .
+\]
+
+\begin{remark}[Surrogate hypothesis]
+\label{rem:surrogate}
+$D_\xi$ tests $H_0^\xi:$ ``the $\xi$-profiles align'', not $H_0$ itself. Since
+$H_0\Rightarrow H_0^\xi$ but not conversely, the test controls the level under
+$H_0$ and is a screening test for it: it can miss alternatives whose profiles
+happen to align (Section~\ref{sec:xi} makes this precise in Hermite terms). This is
+the price of reducing a $2$-D comparison to a $1$-D profile; the ICA-canonicalized
+energy test of Section~\ref{sec:valid}, which retains the full distribution, does
+not pay it, at the cost of a canonicalisation heuristic.
+\end{remark}
+
+With empirical profiles $\hat k_X,\hat k_Y$ on a fixed grid
+$\theta_1,\dots,\theta_M$, the statistic is
+\begin{equation}
+\label{eq:Tn}
+T_n=n\cdot\min_{\epsilon\in\{\pm1\}}\min_{s}\ \frac1M\sum_{g=1}^M
+\big(\hat k_Y(\theta_g)-\hat k_X(\epsilon\theta_g+s)\big)^2 .
+\end{equation}
+
+\section{Limit law}
+\label{sec:prob}
+
+\begin{assumption}[$\xi$-integrability and Donsker class]
+\label{ass:xi}
+$\xi$ measurable, $\sup_a\E[\xi(a^\top Z)^2]<\infty$ for both laws, and
+$\{z\mapsto\xi(a^\top z):a\in\Sp^1\}$ Donsker for both.
+\end{assumption}
+
+\begin{lemma}[Functional CLT]
+\label{lem:clt}
+Under Assumption~\ref{ass:xi}, $\sqrt n(\hat k_X-k_X)\weakto\Gp_X$ and
+$\sqrt n(\hat k_Y-k_Y)\weakto\Gp_Y$ independently, mean-zero Gaussian with
+covariance $\Gamma_\xi^\bullet(\theta,\theta')=\mathrm{Cov}(\xi(a_\theta^\top Z),
+\xi(a_{\theta'}^\top Z))$.
+\end{lemma}
+
+Let $s_0$ be the population-optimal shift ($D(s_0)=0$ under $H_0$).
+
+\begin{assumption}[Non-degenerate alignment]
+\label{ass:nondeg}
+$s_0$ is isolated modulo reflection, $D''(s_0)>0$, $k_X'(\cdot+s_0)\not\equiv0$.
+\end{assumption}
+
+\begin{theorem}[Limit law]
+\label{thm:limit}
+Under $H_0$ and Assumptions~\ref{ass:xi}--\ref{ass:nondeg}, for a fixed grid of $M$
+directions,
+\[
+T_n\weakto L_\xi^{(M)}:=\|\Delta\|^2-\frac{\langle\Delta,k_X'(\cdot+s_0)\rangle^2}
+{\|k_X'(\cdot+s_0)\|^2},\quad \Delta=\Gp_Y-\Gp_X(\cdot+s_0),
+\]
+a finite weighted sum of independent $\chi^2_1$ variables (weights = eigenvalues of
+the covariance of $\Delta$ off the score direction). As $M\to\infty$ the discrete
+inner products converge to their integral analogues.
+\end{theorem}
+
+\begin{remark}[Fixed grid]
+\label{rem:grid}
+We treat $M$ as fixed; $T_n$ converges to the $M$-dimensional quadratic form
+$L_\xi^{(M)}$, not to a continuous functional. This is deliberate: the bootstrap of
+Section~\ref{sec:stat} uses the \emph{same} grid, so it reproduces $L_\xi^{(M)}$
+for that $M$ and validity does not require $M\to\infty$. Larger $M$ refines the
+alignment resolution at $O(M)$ cost.
+\end{remark}
+
+\begin{remark}[Role of the limit law]
+$L_\xi^{(M)}$ is not a plug-in critical value---it depends on unknown moments. It
+is the law the bootstrap reproduces, and under contiguous alternatives
+$k_Y=k_X(\cdot+s_0)+h/\sqrt n$ it becomes the noncentral $\|\Delta+\Pi h\|^2$ ($\Pi$
+= projection off the score), giving the local power.
+\end{remark}
+
+\section{Calibration and consistency}
+\label{sec:stat}
+
+\paragraph{Why naive calibration fails.} A permutation two-sample bootstrap tests
+equality of laws, not equality up to rotation, and rejects true alignments; a
+plug-in dropping the score term overstates the statistic; a split estimating the
+alignment separately mis-centres the correction. Most consequentially
+(Section~\ref{sec:valid}), \emph{minimising a two-sample statistic over rotations
+and permuting} is anticonservative: the rotation search lowers the observed value
+more than it lowers the permutation replicates.
+
+\paragraph{Multiplier bootstrap.} Let $\hat\psi^X_g,\hat\psi^Y_g$ be the whitened
+profile influence functions and $w_1,\dots,w_n$ (resp.\ $w_1',\dots$) i.i.d.\
+mean-zero variance-one multipliers independent of the data. With
+$\Gp_X^{*}(\theta_g)=n^{-1/2}\sum_i w_i\hat\psi^X_g(X_i)$ and $\Gp_Y^{*}$
+analogously, form $T_n^{*}$ from $\Delta^{*}=\Gp_Y^{*}-\Gp_X^{*}(\cdot+\hat s)$
+exactly as $T_n$ (the same aligned minimisation reproduces the score correction).
+
+\begin{proposition}[Bootstrap consistency]
+\label{prop:boot}
+Under $H_0$ and Assumptions~\ref{ass:xi}--\ref{ass:nondeg}, conditionally on the
+data and in probability $T_n^{*}\weakto L_\xi^{(M)}$; the test rejecting when $T_n$
+exceeds the conditional $(1-\alpha)$ quantile has asymptotic level $\alpha$.
+\end{proposition}
+
+\begin{proposition}[Estimated whitening]
+\label{prop:white}
+With sample whitening, Lemma~\ref{lem:clt} holds with $\psi^X_g$ replaced by
+$\bar\psi^X_g=\psi^X_g+\Lambda_g^\top\mathrm{vech}(XX^\top-\E XX^\top)$; the
+bootstrap stays consistent if the multipliers weight $\bar\psi$.
+\end{proposition}
+
+\begin{proposition}[Consistency]
+\label{prop:power}
+If $D_\xi>0$ then $T_n\to\infty$ and the power tends to one. If $D_\xi=0$ while
+$H_0$ fails (Remark~\ref{rem:surrogate}), the test is not consistent for that
+contrast---the reason for the bank of Section~\ref{sec:xi}.
+\end{proposition}
+
+\paragraph{Numerical calibration.} Figure~\ref{fig:calib} shows the bootstrap in
+the isotropic light-tailed regime: the level is controlled---indeed conservative at
+these sizes---and power tends to one.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.60\textwidth]{fig_calibration.png}
+\caption{Calibration, isotropic light-tailed regime. Dashed: null level; solid:
+power vs a Gaussian alternative; dotted: nominal $0.05$.}
+\label{fig:calib}
+\end{figure}
+
+\section{Which tests are valid, and how they compare}
+\label{sec:valid}
+
+We compare five procedures at $n=200$ over $80$ replications
+(Figure~\ref{fig:power}, Table~\ref{tab:power}): the projected test; an
+ICA-canonicalized energy test (canonicalise each sample by FastICA, then an energy
+two-sample test); a rotation-aligned energy test (minimise energy over rotations,
+permutation-calibrated); a naive energy test; and a naive kernel (MMD) test.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\textwidth]{fig_power_comparison.png}
+\caption{Validity and power ($n=200$, $80$ replications, $\pm1$ s.e.). The two
+naive aligned procedures over-reject the rotation null and are invalid; the
+projected test and energy-after-ICA control the level. Among the valid tests,
+energy-after-ICA is at least as powerful.}
+\label{fig:power}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lccc}
+\toprule
+method & $H_0$ (rotation) & power (Gaussian) & power (uniform)\\
+\midrule
+projected test (ours)     & $0.00\pm.00$ & $0.81\pm.04$ & $0.04\pm.02$\\
+energy after ICA          & $0.06\pm.03$ & $0.98\pm.02$ & $0.25\pm.05$\\
+energy, rotation-aligned  & $0.54\pm.06$ & $1.00\pm.00$ & $1.00\pm.00$\\
+energy, naive             & $0.84\pm.04$ & $0.99\pm.01$ & $0.53\pm.06$\\
+MMD, naive                & $0.00\pm.00$ & $0.00\pm.00$ & $0.00\pm.00$\\
+\bottomrule
+\end{tabular}
+\caption{Rejection rates, isotropic regime, $n=200$. The rotation-aligned and naive
+energy tests are invalid; the ``power'' columns are meaningful only for the
+level-controlling rows.}
+\label{tab:power}
+\end{table}
+
+Two findings stand out. First, \emph{validity}: aligning a two-sample statistic by
+a rotation search and permuting does not control the level---the rotation-aligned
+energy test rejects the rotation null $54\%$ of the time, and the naive energy test
+$84\%$. Only the projected test and energy-after-ICA are valid. Second,
+\emph{power}: among the valid tests, energy-after-ICA is competitive and, on these
+alternatives, more powerful than the projected test---unsurprising, since it retains
+the full distribution after alignment while the projected test compresses to a
+$1$-D profile. We therefore do not claim power superiority for the projected test.
+Its case rests on Sections~\ref{sec:prob}--\ref{sec:stat}: an explicit limit law
+and a bootstrap with a proven guarantee, where energy-after-ICA relies on a
+canonicalisation heuristic tied to ICA identifiability.
+
+\section{A Hermite view of contrast choice}
+\label{sec:xi}
+
+Expand $\xi$ in probabilist Hermite polynomials, $\xi=\sum_j c_j\He_j$,
+$c_j=\E_{N(0,1)}[\xi\He_j]/j!$. For whitened $Z$, $\E[\He_1(a^\top Z)]=0$ (centred)
+and $\E[\He_2(a^\top Z)]=\mathrm{Var}(a^\top Z)-1=0$ (identity covariance), so
+\begin{equation}
+\label{eq:hermite}
+k_P(\theta)=c_0(\xi)+\sum_{j\ge3}c_j(\xi)\,m_j^P(\theta),\qquad
+m_j^P(\theta)=\E[\He_j(a_\theta^\top Z)] :
+\end{equation}
+\emph{whitening annihilates Hermite orders $0,1,2$}, and the test sees only the
+supra-quadratic part of $\xi$. Three consequences.
+
+\emph{Non-degeneracy} (Assumption~\ref{ass:nondeg}) holds iff $\sum_{j\ge3}c_j
+m_j^X$ is non-constant---the null must carry directional structure at some order
+$j\ge3$ with $c_j\ne0$. This is the surrogate gap of Remark~\ref{rem:surrogate} in
+coordinates, and links to ICA identifiability \cite{comon}.
+
+\emph{No single contrast dominates.} A contrast is blind to any order with
+$c_j=0$: $u^4$ (mass at $j{=}4$) is blind to skewness, an odd contrast to symmetric
+kurtosis. Figure~\ref{fig:diss} and Table~\ref{tab:diss} show the dissociation:
+$u^3$ detects a skewed alternative but not a Gaussian one, $u^4$ the reverse. All
+contrasts with supra-quadratic support are consistent (Table~\ref{tab:hermite}),
+differing only in efficiency; $\log\cosh$, standard in ICA, is the least efficient,
+its Hermite mass sitting at the annihilated order two.
+
+\emph{Combine with a corrected bank.} Since no fixed contrast is uniformly best,
+combine a few. Pooling the discrepancies into one statistic is delicate---the sum
+is dominated by the noisiest order and depends on scaling---so we use a scale-free
+multiplicity-corrected bank: reject if $\min_j p_j<\alpha/|\text{bank}|$. With
+$\{u^3,u^4\}$ this dominates either contrast alone (Table~\ref{tab:diss}); the
+Bonferroni correction is conservative because the $p_j$ are positively correlated,
+and a jointly calibrated combination would recover a little power.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_dissociation.png}
+\caption{No single contrast dominates. $u^4$ misses the skewness alternative, $u^3$
+the kurtosis one; the corrected bank $\{u^3,u^4\}$ handles both.}
+\label{fig:diss}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+contrast & $c_4$ & $c_6$ & supra-quad.\ variance & data factor vs $u^4$\\
+\midrule
+$u^4$     & $1.00$   & $0$      & $24.0$   & $1\times$\\
+$u^6$     & $15.0$   & $1.0$    & $6120$   & $0.004\times$\\
+$|u|$     & $-0.033$ & $0.003$  & $0.042$  & $574\times$\\
+$\log\cosh$ & $-0.015$ & $0.001$ & $0.006$ & $3793\times$\\
+\bottomrule
+\end{tabular}
+\caption{Post-whitening Hermite content. All contrasts are consistent; the data
+factor is the relative sample size for comparable signal. Efficiency is not
+monotone in $|c_j|$: the bounded $|u|$ has tiny coefficients but tiny noise.}
+\label{tab:hermite}
+\end{table}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lccc}
+\toprule
+contrast/method & $H_0$ & power (kurtosis alt.) & power (skewness alt.)\\
+\midrule
+$u^3$ (skewness)          & 0.02 & 0.00 & 0.95\\
+$u^4$ (kurtosis)          & 0.00 & 1.00 & 0.77\\
+bank $\{u^3,u^4\}$ (Bonf.)& 0.00 & 0.97 & 0.92\\
+\bottomrule
+\end{tabular}
+\caption{Contrast choice, $n=400$. Single contrasts dissociate; the bank handles
+both.}
+\label{tab:diss}
+\end{table}
+
+\section{A real-data illustration}
+\label{sec:realdata}
+
+The regime this paper targets---whitened, isotropic, non-Gaussian---occurs in
+real bivariate data, and the calibration caution of Section~\ref{sec:valid} is not
+an artifact of Gaussian simulation. We illustrate on the Wisconsin diagnostic
+breast-cancer data, taking two skewed real features (mean area and mean concavity;
+sample skewness $1.6$ and $1.4$).
+
+\emph{Calibration on real marginals.} To obtain a rotation null that is true by
+construction while keeping genuinely real marginals, we split the sample into two
+halves and apply an independent random rotation to each; the two halves are then
+equal up to a rotation. Over $100$ such splits, Table~\ref{tab:real} reports the
+rejection rate at level $0.05$. The naive energy test rejects the true rotation in
+$76\%$--$83\%$ of splits---the over-rejection of Section~\ref{sec:valid}, now on
+real data. The projected test controls the level (no rejections). Strikingly, the
+ICA-canonicalized energy test---valid, and often more powerful, in the simulations
+of Section~\ref{sec:valid}---over-rejects here ($33\%$--$64\%$): on these marginals
+the two whitened components carry similar higher-order structure, so the ICA
+canonicalization resolves the two halves to different orientations and the
+comparison ceases to be level-valid. The rotation-aligned energy test, by contrast,
+controls the level on these data ($0.00$--$0.04$), so its over-rejection in the
+isotropic simulation of Section~\ref{sec:valid} is regime-dependent; the naive energy
+test, however, over-rejects in both settings, and the projected test controls the
+level in both. The projected test's calibration does not depend on an ICA fit
+converging, and this is where that guarantee earns its place.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcc}
+\toprule
+rejection under the rotation null ($\alpha=0.05$) & area / concavity & radius / worst-conc. \\
+\midrule
+projected test (ours)      & \textbf{0.00} & \textbf{0.00} \\
+energy after ICA           & 0.33 & 0.64 \\
+energy, rotation-aligned   & 0.00 & 0.04 \\
+energy, naive              & 0.76 & 0.83 \\
+\bottomrule
+\end{tabular}
+\caption{Calibration on real marginals (breast-cancer), two feature pairs. The
+projected test controls the level; the naive energy test grossly over-rejects; and
+the ICA-canonicalized energy test, valid in simulation, loses level control on real
+data.}
+\label{tab:real}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.68\textwidth]{fig_realdata.png}
+\caption{Rejection rate under a true rotation null on real marginals. Only the
+projected test controls the level across both feature pairs; naive energy and
+energy-after-ICA over-reject.}
+\label{fig:real}
+\end{figure}
+
+\emph{A two-sample comparison.} Testing the benign against the malignant class on
+the same two features, the projected test does not reject equality up to a rotation
+($p=0.45$), while the naive and ICA tests return $p=0.17$ and $p=0.03$. Given the
+calibration above---where the naive and ICA tests reject a \emph{true} null at high
+rates---their $p$-values here cannot be read as evidence; only the level-valid
+projected test supports an interpretable conclusion. The lesson mirrors the paper's
+thesis: on real data the projected test is the one procedure that stays valid, so
+its verdict is the one a practitioner can trust.
+
+\section{Discussion}
+\label{sec:disc}
+
+The practical message is twofold: testing equality up to a rotation demands
+calibration designed for the nuisance---naive aligned two-sample tests are
+anticonservative---and, once validity is secured, an ICA-canonicalized energy test
+is a strong baseline that the projected test does not beat on power. The projected
+test's value is its explicit theory and guaranteed calibration, together with the
+Hermite reading of contrast choice.
+
+The honest limits are several. The theory is for $d=2$; general $d$ replaces the
+scalar shift by an $\argmin$ over the $\Ocal(d)$ manifold with $d(d-1)/2$ nuisance
+directions and can have non-isolated minima when components share higher moments,
+so Theorem~\ref{thm:limit} does not extend without further work; the same
+degeneracy makes Assumption~\ref{ass:nondeg} fail, and, tellingly, it is exactly
+when the alignment is ambiguous that ICA canonicalisation also fails, so no method
+gains there. The method targets a profile surrogate (Remark~\ref{rem:surrogate}),
+mitigated but not removed by the bank. It suits the isotropic regime; under
+anisotropic covariance whitening already resolves the rotation. The kurtosis
+contrast needs eighth moments, so heavy-tailed sources require large samples. A
+robust divergence analogue for side-channel analysis is a natural applied direction
+requiring validation on real data, left to future work.
+
+\section*{Disclosure statement}
+The author reports no competing interests.
+
+\section*{Funding}
+No funding was received.
+
+\section*{Data availability statement}
+The real-data illustration uses the Wisconsin Diagnostic Breast Cancer dataset, a
+public benchmark available in the \texttt{scikit-learn} library and originally from
+the UCI Machine Learning Repository. No new data were generated. All results---the
+simulation studies and the real-data analysis---are fully reproducible from the code
+provided as supplementary material and archived at
+\url{https://doi.org/10.5281/zenodo.23023835}, which runs with a fixed random seed.
+
+\appendix
+
+\section{Reminders and proofs}
+\label{app}
+
+\emph{Donsker/Hermite.} $\{\theta\mapsto\xi(a_\theta^\top z)\}$ is Donsker under a
+square-integrable envelope ($\|z\|^4$ for $u^4$, needing $\E\|Z\|^8<\infty$;
+$O(\|z\|)$ for $\log\cosh$). The probabilist polynomials satisfy
+$\E_{N(0,1)}[\He_j\He_k]=j!\delta_{jk}$, giving \eqref{eq:hermite}; orders $0,1,2$
+integrate to constants under centring and identity covariance.
+
+\medskip\noindent\emph{Theorem~\ref{thm:limit}.} Let $D_n(s)=\frac1M\sum_g(\hat
+k_Y(\theta_g)-\hat k_X(\theta_g+s))^2$. At $s_0$, $nD_n(s_0)\weakto\|\Delta\|^2$ by
+Lemma~\ref{lem:clt}. By Assumption~\ref{ass:nondeg} and the argmax theorem
+$\hat s-s_0=O_\Prob(n^{-1/2})$; a second-order expansion with $D_n'(s_0)=
+O_\Prob(n^{-1/2})$, $D_n''(s_0)\to D''(s_0)$ gives $n\min_s D_n(s)=nD_n(s_0)-
+\tfrac12\{\sqrt n D_n'(s_0)\}^2/D_n''(s_0)+o_\Prob(1)$. Since $\sqrt n D_n'(s_0)
+\weakto-2\langle\Delta,k_X'(\cdot+s_0)\rangle$ and $D_n''(s_0)\to2\|k_X'(\cdot+s_0)
+\|^2$, continuous mapping yields $L_\xi^{(M)}$; the reflection is a continuous
+minimum over two branches.
+
+\medskip\noindent\emph{Propositions~\ref{prop:boot}--\ref{prop:white}.} With
+$W(\Sigma)$ smooth, a first-order expansion gives the augmented influence function
+$\bar\psi^X_a=\psi^X_a+\Lambda_a^\top\mathrm{vech}(XX^\top-\Sigma)$. Conditionally,
+$\Gp^{*}_\bullet$ sums independent mean-zero terms with conditional covariance
+$\to\Gamma_\xi^\bullet$, so by the multiplier CLT $\Gp^{*}_\bullet\weakto
+\Gp_\bullet$ conditionally in probability; the norm and score projection are
+continuous and $\hat s\to s_0$, giving $T_n^{*}\weakto L_\xi^{(M)}$. The
+anticonservatism of the rotation-aligned permutation test follows because the
+observed statistic minimises over a continuum of rotations while each permutation
+replicate minimises over the same continuum on exchangeable data.
+
+\begin{thebibliography}{99}
+\bibitem{szekely} G.~Sz\'ekely and M.~Rizzo. Energy statistics.
+\emph{J.\ Statist.\ Plann.\ Inference}, 143:1249--1272, 2013.
+\bibitem{gretton} A.~Gretton et al. A kernel two-sample test. \emph{JMLR},
+13:723--773, 2012.
+\bibitem{remillard} B.~R\'emillard and O.~Scaillet. Testing for equality between
+two copulas. \emph{J.\ Multivariate Anal.}, 100:377--386, 2009.
+\bibitem{friedman} J.~Friedman and J.~Tukey. A projection pursuit algorithm for
+exploratory data analysis. \emph{IEEE Trans.\ Comput.}, C-23:881--890, 1974.
+\bibitem{huber} P.~Huber. Projection pursuit. \emph{Ann.\ Statist.},
+13:435--475, 1985.
+\bibitem{comon} P.~Comon. Independent component analysis, a new concept?
+\emph{Signal Processing}, 36:287--314, 1994.
+\bibitem{hyvarinen} A.~Hyv\"arinen and E.~Oja. Independent component analysis:
+algorithms and applications. \emph{Neural Networks}, 13:411--430, 2000.
+\bibitem{chenbickel} A.~Chen and P.~Bickel. Efficient independent component
+analysis. \emph{Ann.\ Statist.}, 34:2825--2855, 2006.
+\bibitem{samworth} R.~Samworth and M.~Yuan. Independent component analysis via
+nonparametric maximum likelihood estimation. \emph{Ann.\ Statist.},
+40:2973--3002, 2012.
+\bibitem{vdvw} A.~van der Vaart and J.~Wellner. \emph{Weak Convergence and
+Empirical Processes}. Springer, 1996.
+\end{thebibliography}
+
+\end{document}

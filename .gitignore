@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+align_results/
+rd_out/
+*.aux
+*.log
+*.out
+.DS_Store
